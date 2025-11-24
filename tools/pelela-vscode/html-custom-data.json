@@ -1,0 +1,48 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "pelela",
+      "description": "Pelela template root tag",
+      "attributes": [
+        {
+          "name": "view-model",
+          "description": "Specifies the ViewModel class to bind to this template"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "view-model",
+      "description": "Pelela: Associates a ViewModel with this element",
+      "valueSet": "v"
+    },
+    {
+      "name": "bind-value",
+      "description": "Pelela: Binds the value property to a ViewModel property",
+      "valueSet": "v"
+    },
+    {
+      "name": "bind-visible",
+      "description": "Pelela: Binds the visibility to a ViewModel property",
+      "valueSet": "v"
+    },
+    {
+      "name": "bind-class",
+      "description": "Pelela: Binds CSS classes to a ViewModel property",
+      "valueSet": "v"
+    },
+    {
+      "name": "bind-style",
+      "description": "Pelela: Binds inline styles to a ViewModel property",
+      "valueSet": "v"
+    },
+    {
+      "name": "click",
+      "description": "Pelela: Binds click event to a ViewModel method",
+      "valueSet": "v"
+    }
+  ]
+}
+

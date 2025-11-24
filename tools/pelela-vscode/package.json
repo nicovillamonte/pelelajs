@@ -21,11 +21,37 @@
         "configuration": "./language-configuration.json"
       }
     ],
+    "configurationDefaults": {
+      "[pelela]": {
+        "editor.suggest.insertMode": "replace",
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": true
+        }
+      },
+      "emmet.includeLanguages": {
+        "pelela": "html"
+      },
+      "html.suggest.html5": true,
+      "html.autoClosingTags": true
+    },
     "grammars": [
       {
         "language": "pelela",
         "scopeName": "text.html.pelela",
-        "path": "./syntaxes/pelela.tmLanguage.json"
+        "path": "./syntaxes/pelela.tmLanguage.json",
+        "embeddedLanguages": {
+          "text.html": "html",
+          "text.html.basic": "html",
+          "source.css": "css",
+          "source.js": "javascript"
+        }
+      },
+      {
+        "scopeName": "pelela.injection",
+        "path": "./syntaxes/pelela.tmLanguage.json",
+        "injectTo": ["text.html.basic", "text.html"]
       }
     ],
     "snippets": [
@@ -33,6 +59,9 @@
         "language": "pelela",
         "path": "./snippets/pelela.json"
       }
-    ]
+    ],
+    "html": {
+      "customData": ["./html-custom-data.json"]
+    }
   }
 }

@@ -1,21 +1,13 @@
-// tools/pelela-vscode/extension.js
 const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
 
-/**
- * Devuelve el nombre del atributo en el que está el cursor, si aplica.
- * Ej: <span bind-value="|">  -> "bind-value"
- */
 function getCurrentAttributeName(lineText, positionCharacter) {
   const textUpToCursor = lineText.slice(0, positionCharacter);
   const match = /(\b[\w-]+)\s*=\s*"[^"]*$/.exec(textUpToCursor);
   return match ? match[1] : null;
 }
 
-/**
- * Dado un archivo .pelela, encuentra el .ts asociado (mismo nombre)
- */
 function findViewModelFile(pelelaUri) {
   const pelelaPath = pelelaUri.fsPath;
   const tsPath = pelelaPath.replace(/\.pelela$/, ".ts");
@@ -25,23 +17,12 @@ function findViewModelFile(pelelaUri) {
   return null;
 }
 
-/**
- * Extrae nombres "interesantes" del view model:
- * - propiedades (foo: number = 0;  / foo = 0)
- * - getters (get foo() { ... })
- * - métodos (foo() { ... })
- *
- * Es un parser muy simple a base de regex; para docencia alcanza de sobra.
- */
 function extractViewModelMembers(tsFilePath) {
   const text = fs.readFileSync(tsFilePath, "utf-8");
 
-  /** @type {Set<string>} */
   const properties = new Set();
-  /** @type {Set<string>} */
   const methods = new Set();
 
-  // propiedades con tipo o asignación
   const propRegex =
     /^\s*(?:public\s+|private\s+|protected\s+)?([a-zA-Z_]\w*)\s*(?::|=)\s*/gm;
   let match;
@@ -49,14 +30,12 @@ function extractViewModelMembers(tsFilePath) {
     properties.add(match[1]);
   }
 
-  // getters -> los tratamos como propiedades
   const getterRegex =
     /^\s*(?:public\s+|private\s+|protected\s+)?get\s+([a-zA-Z_]\w*)\s*\(/gm;
   while ((match = getterRegex.exec(text))) {
     properties.add(match[1]);
   }
 
-  // métodos "normales"
   const methodRegex =
     /^\s*(?:public\s+|private\s+|protected\s+)?([a-zA-Z_]\w*)\s*\(/gm;
   while ((match = methodRegex.exec(text))) {
@@ -71,32 +50,84 @@ function extractViewModelMembers(tsFilePath) {
   };
 }
 
-/**
- * Registra el completion provider para Pelela.
- */
+function getHtmlElements() {
+  return [
+    "div", "span", "p", "a", "button", "input", "textarea", "select", "option",
+    "label", "form", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li",
+    "table", "tr", "td", "th", "thead", "tbody", "img", "video", "audio",
+    "section", "article", "header", "footer", "nav", "aside", "main"
+  ];
+}
+
+function getHtmlAttributes() {
+  return [
+    "id", "class", "style", "title", "data-", "aria-", "role",
+    "src", "href", "alt", "type", "value", "placeholder", "name",
+    "disabled", "readonly", "required", "checked", "selected",
+    "width", "height", "target", "rel"
+  ];
+}
+
 function activate(context) {
+  vscode.commands.executeCommand('setContext', 'pelela.enabled', true);
+  
+  vscode.workspace.onDidOpenTextDocument((doc) => {
+    if (doc.languageId === 'pelela') {
+      vscode.languages.setTextDocumentLanguage(doc, 'pelela');
+    }
+  });
+
+  if (vscode.window.activeTextEditor) {
+    const doc = vscode.window.activeTextEditor.document;
+    if (doc.languageId === 'pelela') {
+      vscode.languages.setTextDocumentLanguage(doc, 'pelela');
+    }
+  }
+
+  vscode.languages.setLanguageConfiguration("pelela", {
+    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+  });
+
   const provider = vscode.languages.registerCompletionItemProvider(
     { language: "pelela", scheme: "file" },
     {
-      /**
-       * @param {vscode.TextDocument} document
-       * @param {vscode.Position} position
-       * @returns {vscode.CompletionItem[]}
-       */
-      provideCompletionItems(document, position) {
+      async provideCompletionItems(document, position, token, context) {
         const items = [];
 
         const line = document.lineAt(position.line);
         const lineText = line.text;
+        const textBeforeCursor = lineText.slice(0, position.character);
         const attributeName = getCurrentAttributeName(
           lineText,
           position.character,
         );
 
         const isInsideAttributeValue = !!attributeName;
+        const isInsideTag = /<[^>]*$/.test(textBeforeCursor);
+        const isStartingTag = /<\w*$/.test(textBeforeCursor);
 
-        // 1) Siempre sugerimos atributos propios de Pelela (view-model, bind-*, click)
-        if (!isInsideAttributeValue) {
+        if (isStartingTag && !isInsideAttributeValue) {
+          for (const tag of getHtmlElements()) {
+            const item = new vscode.CompletionItem(
+              tag,
+              vscode.CompletionItemKind.Property
+            );
+            item.sortText = "z" + tag;
+            items.push(item);
+          }
+        }
+
+        if (isInsideTag && !isInsideAttributeValue) {
+          for (const attr of getHtmlAttributes()) {
+            const item = new vscode.CompletionItem(
+              attr,
+              vscode.CompletionItemKind.Property
+            );
+            item.insertText = new vscode.SnippetString(`${attr}="\${1}"`);
+            item.sortText = "z" + attr;
+            items.push(item);
+          }
+
           const attrNames = [
             "view-model",
             "bind-value",
@@ -117,24 +148,25 @@ function activate(context) {
                 'view-model="${1:App}"',
               );
               item.detail = "Pelela: view model asociado al template";
+              item.sortText = "!0_" + name;
             } else if (name === "click") {
               item.insertText = new vscode.SnippetString(
                 'click="${1:handler}"',
               );
               item.detail = "Pelela: ejecuta un método del view model al hacer click";
+              item.sortText = "!0_" + name;
             } else if (name.startsWith("bind-")) {
               item.insertText = new vscode.SnippetString(
                 `${name}="\${1:propiedad}"`,
               );
               item.detail = "Pelela: binding al view model";
+              item.sortText = "!0_" + name;
             }
 
             items.push(item);
           }
         }
 
-        // 2) Si estamos dentro del valor de un bind-* o click="..."
-        //    sugerimos propiedades/métodos del view model.
         if (
           isInsideAttributeValue &&
           attributeName &&
@@ -145,25 +177,23 @@ function activate(context) {
             const { properties, methods } = extractViewModelMembers(tsFile);
 
             if (attributeName.startsWith("bind-")) {
-              // solo propiedades (icono de property, rectángulo azul)
               for (const name of properties) {
                 const item = new vscode.CompletionItem(
                   name,
                   vscode.CompletionItemKind.Field,
                 );
                 item.detail = "Pelela ViewModel property";
-                item.sortText = `1_${name}`; // arriba de los atributos
+                item.sortText = `!0_${name}`;
                 items.push(item);
               }
             } else if (attributeName === "click") {
-              // solo métodos (icono de método)
               for (const name of methods) {
                 const item = new vscode.CompletionItem(
                   name,
                   vscode.CompletionItemKind.Method,
                 );
                 item.detail = "Pelela ViewModel method";
-                item.sortText = `1_${name}`;
+                item.sortText = `!0_${name}`;
                 items.push(item);
               }
             }
@@ -173,8 +203,13 @@ function activate(context) {
         return items;
       },
     },
-    '"', // trigger al abrir comillas
-    ".", // y si quieren forzar con punto
+    " ",
+    "=",
+    '"',
+    "'",
+    "<",
+    ">",
+    "/"
   );
 
   context.subscriptions.push(provider);
