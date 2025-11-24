@@ -1,12 +1,17 @@
 import * as fs from "fs";
-import type { Plugin } from "vite";
 import path from "node:path";
 
 function escapeTemplate(html: string): string {
   return html.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 }
 
-export function pelelajsPlugin(): Plugin {
+export interface PelelaVitePlugin {
+  name: string;
+  enforce?: "pre" | "post";
+  load?(this: any, id: string): string | null | Promise<string | null>;
+}
+
+export function pelelajsPlugin(): PelelaVitePlugin {
   return {
     name: "vite-plugin-pelelajs",
     enforce: "pre",
