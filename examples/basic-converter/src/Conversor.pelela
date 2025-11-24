@@ -8,6 +8,8 @@
 
   <p bind-visible="hasResult">
     Kilómetros:
-    <span bind-value="kilometers" bind-class="kilometersClass"></span>
+    <span 
+      bind-value="kilometers" 
+      bind-class="kilometersClass" />
   </p>
 </pelela>

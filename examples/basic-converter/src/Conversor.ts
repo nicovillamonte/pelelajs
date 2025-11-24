@@ -10,16 +10,6 @@ export class Conversor {
   }
 
   get kilometersClass(): string {
-    const km = this.kilometers;
-
-    if (km > 100) {
-      return "km-high";
-    }
-
-    if (km > 0) {
-      return "km-low";
-    }
-
-    return "";
+    return this.kilometers > 100 ? 'big' : 'small'
   }
 }

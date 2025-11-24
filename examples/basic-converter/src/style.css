@@ -1,8 +1,8 @@
-.km-low {
+.small {
   color: green;
 }
 
-.km-high {
+.big {
   color: red;
   font-weight: bold;
 }
