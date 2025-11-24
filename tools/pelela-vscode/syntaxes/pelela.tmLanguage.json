@@ -2,11 +2,21 @@
   "scopeName": "text.html.pelela",
   "name": "Pelela Template",
   "patterns": [
-    { "include": "#comment" },
-    { "include": "#pelela-tag" },
-    { "include": "#tag" },
-    { "include": "#entities" },
-    { "include": "#text" }
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#pelela-tag"
+    },
+    {
+      "include": "#tag"
+    },
+    {
+      "include": "#entities"
+    },
+    {
+      "include": "#text"
+    }
   ],
   "repository": {
     "comment": {
@@ -24,18 +34,24 @@
           "name": "meta.tag.pelela",
           "begin": "<\\s*(pelela)\\b",
           "beginCaptures": {
-            "1": { "name": "entity.name.tag.pelela" }
+            "1": {
+              "name": "entity.name.tag.pelela"
+            }
           },
           "end": ">",
           "patterns": [
-            { "include": "#attributes" }
+            {
+              "include": "#attributes"
+            }
           ]
         },
         {
           "name": "meta.tag.pelela",
           "begin": "<\\/\\s*(pelela)\\b",
           "beginCaptures": {
-            "1": { "name": "entity.name.tag.pelela" }
+            "1": {
+              "name": "entity.name.tag.pelela"
+            }
           },
           "end": ">"
         }
@@ -47,18 +63,24 @@
           "name": "meta.tag.pelela",
           "begin": "<(?!\\/)([A-Za-z][A-Za-z0-9\\-]*)",
           "beginCaptures": {
-            "1": { "name": "entity.name.tag.pelela.html" }
+            "1": {
+              "name": "entity.name.tag.pelela.html"
+            }
           },
           "end": ">",
           "patterns": [
-            { "include": "#attributes" }
+            {
+              "include": "#attributes"
+            }
           ]
         },
         {
           "name": "meta.tag.pelela",
           "begin": "<\\/([A-Za-z][A-Za-z0-9\\-]*)",
           "beginCaptures": {
-            "1": { "name": "entity.name.tag.pelela.html" }
+            "1": {
+              "name": "entity.name.tag.pelela.html"
+            }
           },
           "end": ">"
         }
@@ -67,12 +89,36 @@
     "attributes": {
       "patterns": [
         {
-          "name": "entity.other.attribute-name.pelela.binding",
-          "match": "\\b(bind-[A-Za-z0-9_\\-]+)\\b"
+          "name": "meta.attribute.pelela.viewmodel",
+          "begin": "\\b(view-model)\\b\\s*=\\s*\"",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.other.attribute-name.pelela.viewmodel"
+            }
+          },
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "variable.other.pelela.viewmodel",
+              "match": "[^\"]+"
+            }
+          ]
         },
         {
-          "name": "entity.other.attribute-name.pelela.viewmodel",
-          "match": "\\b(view-model)\\b"
+          "name": "meta.attribute.pelela.binding",
+          "begin": "\\b(bind-[A-Za-z0-9_\\-]+)\\b\\s*=\\s*\"",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.other.attribute-name.pelela.binding"
+            }
+          },
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "variable.other.pelela.binding",
+              "match": "[^\"]+"
+            }
+          ]
         },
         {
           "name": "entity.other.attribute-name.pelela",
