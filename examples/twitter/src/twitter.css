@@ -1,0 +1,47 @@
+* {
+	font-family: 'Geist Mono', sans-serif;
+	box-sizing: border-box;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	font-size: 1.5rem;
+  padding: 1rem;
+  margin: 1rem;
+}
+
+h1 {
+	font-size: 1.7rem;
+}
+
+input,
+textarea {
+	width: 100%;
+	height: 10em;
+	font-size: 1em;
+	margin-bottom: 2em;
+	padding: 0.8em;
+	border: 1px solid darkslategray;
+}
+
+.badge {
+	font-size: 1.2em;
+	padding: 1em;
+	border-radius: 35%;
+  width: fit-content;
+}
+
+.pasado {
+	color: white;
+	background-color: rgb(201, 72, 72);
+}
+
+.limite {
+	background-color: #ffdc28;
+}
+
+.ok {
+	color: white;
+	background-color: green;
+}

@@ -1,0 +1,7 @@
+<pelela view-model="Twitter">
+  <form name="form" class="form">
+    <h1>Twitter - Pelela</h1>
+    <textarea id="tweet" placeholder="¿Qué estás pensando?" bind-value="tweet"></textarea>
+    <span class="badge" bind-class="espacioRestanteClass" bind-value="restantes"/>
+  </form>
+</pelela>
