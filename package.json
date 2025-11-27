@@ -9,6 +9,7 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",
+    "ci:local": "pnpm install && pnpm run lint && pnpm run test -- --coverage",
     "install:vscode": "node scripts/install-pelela-vscode.cjs"
   },
   "keywords": [],
