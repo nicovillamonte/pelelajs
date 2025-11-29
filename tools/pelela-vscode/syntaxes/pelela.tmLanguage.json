@@ -226,6 +226,27 @@
               "name": "variable.language.pelela"
             }
           }
+        },
+        {
+          "name": "meta.attribute.pelela.foreach",
+          "match": "\\b(for-each)\\s*(=)\\s*(\"([^\"]*)\"|'([^']*)')",
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.pelela.foreach"
+            },
+            "2": {
+              "name": "punctuation.separator.key-value.html"
+            },
+            "3": {
+              "name": "meta.attribute-value.pelela"
+            },
+            "4": {
+              "name": "variable.language.pelela"
+            },
+            "5": {
+              "name": "variable.language.pelela"
+            }
+          }
         }
       ]
     },

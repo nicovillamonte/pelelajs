@@ -135,6 +135,7 @@ function activate(context) {
             "bind-class",
             "bind-style",
             "click",
+            "for-each",
           ];
 
           for (const name of attrNames) {
@@ -161,6 +162,12 @@ function activate(context) {
               );
               item.detail = "Pelela: renderizado condicional";
               item.sortText = "!0_" + name;
+            } else if (name === "for-each") {
+              item.insertText = new vscode.SnippetString(
+                'for-each="${1:item} of ${2:collection}"',
+              );
+              item.detail = "Pelela: itera sobre una colección del view model";
+              item.sortText = "!0_" + name;
             } else if (name.startsWith("bind-")) {
               item.insertText = new vscode.SnippetString(
                 `${name}="\${1:propiedad}"`,
@@ -176,13 +183,13 @@ function activate(context) {
         if (
           isInsideAttributeValue &&
           attributeName &&
-          (attributeName.startsWith("bind-") || attributeName === "click" || attributeName === "if")
+          (attributeName.startsWith("bind-") || attributeName === "click" || attributeName === "if" || attributeName === "for-each")
         ) {
           const tsFile = findViewModelFile(document.uri);
           if (tsFile) {
             const { properties, methods } = extractViewModelMembers(tsFile);
 
-            if (attributeName.startsWith("bind-") || attributeName === "if") {
+            if (attributeName.startsWith("bind-") || attributeName === "if" || attributeName === "for-each") {
               for (const name of properties) {
                 const item = new vscode.CompletionItem(
                   name,
@@ -238,7 +245,7 @@ function activate(context) {
           }
         }
 
-        const bindMatch = /(?:bind-[a-zA-Z0-9_-]+|if)=["']([^"']+)["']/g;
+        const bindMatch = /(?:bind-[a-zA-Z0-9_-]+|if|for-each)=["']([^"']+)["']/g;
         let match;
         while ((match = bindMatch.exec(lineText)) !== null) {
           const propertyName = match[1];
