@@ -9,14 +9,19 @@
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",
-    "install:vscode": "node scripts/install-pelela-vscode.cjs"
+    "install:vscode": "node scripts/install-pelela-vscode.cjs",
+    "audit": "pnpm audit --audit-level moderate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
   "devDependencies": {
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.13"
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.13"
   }
 }
