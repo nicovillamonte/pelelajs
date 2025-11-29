@@ -245,18 +245,60 @@ function activate(context) {
           }
         }
 
+        const forEachInElement = findForEachInElement(document, position.line);
+
         const bindMatch = /(?:bind-[a-zA-Z0-9_-]+|if|for-each)=["']([^"']+)["']/g;
         let match;
         while ((match = bindMatch.exec(lineText)) !== null) {
-          const propertyName = match[1];
-          const startPos = match.index + match[0].indexOf(propertyName);
-          const endPos = startPos + propertyName.length;
+          const fullValue = match[1];
+          const attrStartPos = match.index;
+          const valueStartPos = attrStartPos + match[0].indexOf(fullValue);
+          const valueEndPos = valueStartPos + fullValue.length;
           
-          if (position.character >= startPos && position.character <= endPos) {
+          if (position.character >= valueStartPos && position.character <= valueEndPos) {
             const tsFile = findViewModelFile(document.uri);
-            if (tsFile) {
-              const location = findPropertyDefinition(tsFile, propertyName);
-              if (location) return location;
+            if (!tsFile) continue;
+
+            const cursorOffsetInValue = position.character - valueStartPos;
+            const attrName = match[0].match(/^([^=]+)=/)[1];
+
+            if (attrName === "for-each") {
+              const forEachMatch = /^\s*(\w+)\s+of\s+(\w+)\s*$/.exec(fullValue);
+              if (forEachMatch) {
+                const itemName = forEachMatch[1];
+                const collectionName = forEachMatch[2];
+                const collectionStart = fullValue.indexOf(collectionName);
+                const collectionEnd = collectionStart + collectionName.length;
+
+                if (cursorOffsetInValue >= collectionStart && cursorOffsetInValue <= collectionEnd) {
+                  const location = findPropertyDefinition(tsFile, collectionName);
+                  if (location) return location;
+                }
+              }
+            } else {
+              const parts = fullValue.split('.');
+              let currentPos = 0;
+              
+              for (let i = 0; i < parts.length; i++) {
+                const part = parts[i].trim();
+                const partStart = fullValue.indexOf(part, currentPos);
+                const partEnd = partStart + part.length;
+                
+                if (cursorOffsetInValue >= partStart && cursorOffsetInValue <= partEnd) {
+                  if (forEachInElement && part === forEachInElement.itemName) {
+                    return new vscode.Location(
+                      document.uri,
+                      new vscode.Position(forEachInElement.line, forEachInElement.itemPos)
+                    );
+                  }
+                  
+                  const location = findPropertyDefinition(tsFile, part);
+                  if (location) return location;
+                  break;
+                }
+                
+                currentPos = partEnd + 1;
+              }
             }
           }
         }
@@ -284,6 +326,40 @@ function activate(context) {
   context.subscriptions.push(definitionProvider);
 }
 
+function findForEachInElement(document, currentLine) {
+  let tagContent = '';
+  let startLine = currentLine;
+  
+  for (let i = currentLine; i >= Math.max(0, currentLine - 20); i--) {
+    const lineText = document.lineAt(i).text;
+    tagContent = lineText + '\n' + tagContent;
+    
+    if (/<[^>\/]+/.test(lineText)) {
+      startLine = i;
+      
+      const fullTag = tagContent.replace(/\n/g, ' ');
+      const forEachMatch = /for-each=["'](\w+)\s+of\s+\w+["']/.exec(fullTag);
+      if (forEachMatch) {
+        const itemName = forEachMatch[1];
+        
+        for (let j = i; j <= currentLine; j++) {
+          const searchLine = document.lineAt(j).text;
+          const itemIdx = searchLine.indexOf(itemName, searchLine.indexOf('for-each='));
+          if (itemIdx !== -1) {
+            return { itemName, line: j, itemPos: itemIdx };
+          }
+        }
+      }
+      
+      if (/<\//.test(lineText) || /\/>/.test(lineText)) {
+        break;
+      }
+    }
+  }
+  
+  return null;
+}
+
 function findClassDefinition(tsFilePath, className) {
   const text = fs.readFileSync(tsFilePath, "utf-8");
   const lines = text.split("\n");
@@ -307,7 +383,7 @@ function findPropertyDefinition(tsFilePath, propertyName) {
   const text = fs.readFileSync(tsFilePath, "utf-8");
   const lines = text.split("\n");
   
-  const propRegex = new RegExp(`^\\s*(?:public\\s+|private\\s+|protected\\s+)?${propertyName}\\s*[=:]`, "m");
+  const propRegex = new RegExp(`^\\s*(?:public\\s+|private\\s+|protected\\s+)?${propertyName}\\??\\s*[=:]`, "m");
   const getterRegex = new RegExp(`^\\s*(?:public\\s+|private\\s+|protected\\s+)?get\\s+${propertyName}\\s*\\(`, "m");
   
   for (let i = 0; i < lines.length; i++) {
