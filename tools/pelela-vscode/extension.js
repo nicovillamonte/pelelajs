@@ -327,37 +327,20 @@ function activate(context) {
 }
 
 function findForEachInElement(document, currentLine) {
-  let tagContent = '';
-  let startLine = currentLine;
+  const forEachResults = [];
   
-  for (let i = currentLine; i >= Math.max(0, currentLine - 20); i--) {
+  for (let i = currentLine; i >= 0; i--) {
     const lineText = document.lineAt(i).text;
-    tagContent = lineText + '\n' + tagContent;
     
-    if (/<[^>\/]+/.test(lineText)) {
-      startLine = i;
-      
-      const fullTag = tagContent.replace(/\n/g, ' ');
-      const forEachMatch = /for-each=["'](\w+)\s+of\s+\w+["']/.exec(fullTag);
-      if (forEachMatch) {
-        const itemName = forEachMatch[1];
-        
-        for (let j = i; j <= currentLine; j++) {
-          const searchLine = document.lineAt(j).text;
-          const itemIdx = searchLine.indexOf(itemName, searchLine.indexOf('for-each='));
-          if (itemIdx !== -1) {
-            return { itemName, line: j, itemPos: itemIdx };
-          }
-        }
-      }
-      
-      if (/<\//.test(lineText) || /\/>/.test(lineText)) {
-        break;
-      }
+    const forEachMatch = /for-each=["'](\w+)\s+of\s+\w+["']/.exec(lineText);
+    if (forEachMatch) {
+      const itemName = forEachMatch[1];
+      const itemPos = lineText.indexOf(itemName, lineText.indexOf('for-each='));
+      forEachResults.push({ itemName, line: i, itemPos });
     }
   }
   
-  return null;
+  return forEachResults.length > 0 ? forEachResults[0] : null;
 }
 
 function findClassDefinition(tsFilePath, className) {
